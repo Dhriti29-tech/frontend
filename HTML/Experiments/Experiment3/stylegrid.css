@@ -1,0 +1,128 @@
+:root {
+      --primary: #f4f4f9;
+      --sidebar-bg: #2c3e50;
+      --accent: #1abc9c;
+      --danger: #ff6f61;
+      --text: #333;
+      --card-bg: #fff;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Poppins", sans-serif;
+      background: var(--primary);
+      display: flex;
+      max-height: 100vh;
+    }
+    .side-bar{
+        width:250px;
+        background: var(--sidebar-bg);
+        color: #fff;
+        padding: 1.5rem;
+        min-height: 100vh;
+        position: sticky;
+        top: 0;
+    }
+    .side-bar h2{
+        font-size: 1.5rem;
+        color: var(--accent);
+        margin-bottom: 1.5rem;
+        border-bottom: var(--accent) 2px solid;
+    }
+    .side-bar ul{
+        list-style: none;
+    }
+    .side-bar ul li{
+        font-size: 1rem;
+        margin:1rem 0;;
+    }
+    a{
+      display: inline-block;
+      text-decoration: none;
+      width: 100%;
+      height: 100%;
+      padding: 1rem;
+      text-decoration: none;
+      color: #fff;
+      transition: all 0.3s ease;
+      border-radius: 1rem
+    }
+    side-bar ul li a:hover{
+        color:var(--accent);
+        background-color: #fff1;
+    }
+    .main-content {
+      flex-grow: 1;
+      padding: 2rem;
+      height: full;
+      overflow-y:auto;
+    }
+
+    .section-title {
+      text-align: center;
+      margin: 2rem 0;
+      font-size: 2rem;
+      color: var(--sidebar-bg);
+      text-decoration: dashed underline;
+    }
+
+    .products {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2rem;
+      justify-content: center;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+      max-width: 280px;
+      text-align: center;
+      transition: transform 0.7s;
+    }
+     .card:hover {
+      transform: translateY(-8px);
+    }
+
+    .card img {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+    }
+
+    .card h3 {
+      margin: 1rem 0 0.5rem;
+      color: var(--text);
+    }
+
+    .card p {
+      font-size: 0.9rem;
+      padding: 0 1rem;
+      color: #666;
+    }
+
+    .buy-button {
+      display: inline-block;  
+      margin: 1rem;
+      padding: 0.7rem 1.2rem;
+      background: var(--danger);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background 0.3s;
+    }
+
+    .buy-button:hover {
+      background: #e85a4f;
+    }
+
+   

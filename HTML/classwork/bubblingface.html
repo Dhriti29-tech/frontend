@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Bubbling Face — Demo</title>
+<style>
+  :root{
+    --bg: linear-gradient(180deg,#0f172a,#071034);
+  }
+  html,body{height:100%;margin:0;font-family:system-ui,Segoe UI,Roboto,"Helvetica Neue",Arial;}
+  body{
+    background: var(--bg);
+    overflow:hidden;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:#fff;
+  }
+
+  /* Stage (where bubbles appear) */
+  .stage{
+    position:relative;
+    width:min(960px,95vw);
+    height:min(640px,85vh);
+    border-radius:18px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.02);
+    overflow:hidden;
+    background:
+      radial-gradient(1200px 400px at 10% 10%, rgba(255,255,255,.03), transparent 10%),
+      linear-gradient(180deg, rgba(255,255,255,.02), transparent 30%),
+      linear-gradient(135deg, rgba(255,255,255,.01), transparent 60%),
+      #051029;
+  }
+
+  /* Controls at top center */
+  .controls{
+    position:absolute;
+    left:50%;
+    transform:translateX(-50%);
+    top:12px;
+    display:flex;
+    gap:10px;
+    z-index:40;
+  }
+  .btn{
+    background: rgba(255,255,255,.06);
+    border:1px solid rgba(255,255,255,.06);
+    color:#fff;
+    padding:8px 12px;
+    border-radius:10px;
+    cursor:pointer;
+    backdrop-filter: blur(4px);
+    font-weight:600;
+  }
+  .btn:active{transform:translateY(1px);}
+
+  /* Bubble base */
+  .bubble{
+    position:absolute;
+    bottom:-140px; /* start off-stage */
+    display:inline-grid;
+    place-items:center;
+    user-select:none;
+    touch-action:manipulation;
+    transform-origin:center;
+    pointer-events:auto;
+  }
+
+  .bubble-inner{
+    width:100%;
+    height:100%;
+    border-radius:50%;
+    display:grid;
+    place-items:center;
+    box-shadow: 0 8px 20px rgba(0,0,0,.35), inset 0 -6px 18px rgba(255,255,255,.03);
+    font-size:calc(var(--size) * 0.45px);
+    transition: transform .15s ease;
+    transform-origin:center;
+  }
+
+  /* float animation (only controls Y movement via CSS variables set in JS) */
+  @keyframes floatUp {
+    0%   { transform: translateY(0) translateX(0) rotate(0); opacity: 1; }
+    30%  { transform: translateY(-25%) translateX(var(--driftX)) rotate(var(--rot1)); }
+    65%  { transform: translateY(-65%) translateX(calc(var(--driftX) * -1)) rotate(var(--rot2)); }
+    100% { transform: translateY(var(--riseY)) translateX(var(--driftX)) rotate(var(--rot3)); opacity: .08; }
+  }
+
+  /* small wobble to the face inside */
+  @keyframes wobble {
+    0%{ transform: translateY(0); }
+    50%{ transform: translateY(-6%); }
+    100%{ transform: translateY(0); }
+  }
+
+  /* Pop animation when clicked or removed */
+  .pop {
+    animation: popAnim .25s ease forwards;
+  }
+  @keyframes popAnim {
+    0%{ transform: scale(1); opacity:1; }
+    60%{ transform: scale(1.5); opacity:.9; }
+    100%{ transform: scale(.05); opacity:0; }
+  }
+
+  /* accessibility: visually hidden label */
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
+</style>
+</head>
+<body>
+  <div class="stage" id="stage" aria-label="Bubbling Face Stage">
+    <div class="controls" aria-hidden="false">
+      <button id="toggleAuto" class="btn">Pause</button>
+      <button id="burstOnce" class="btn">Burst 5</button>
+      <button id="clearBtn" class="btn">Clear</button>
+    </div>
+    <span class="sr-only" id="status">Auto-spawn running</span>
+  </div>
+
+<script>
+/*
+  Bubbling Face demo
+  - Click a bubble to pop it.
+  - Buttons: Pause/Resume auto spawn, Burst 5 bubbles, Clear stage.
+  - Customize EMOJIS, spawn rate, size range below.
+*/
+
+const EMOJIS = ["😀","😄","😅","🤣","😊","🥰","🤩","😎","😇","🤠","🤖","👻","😺","😸"];
+const stage = document.getElementById('stage');
+const status = document.getElementById('status');
+
+let autoSpawn = true;
+let spawnInterval = 700; // ms between auto-spawns (reduce for more)
+let spawnTimer = null;
+
+// size range in px (min, max)
+const SIZE_MIN = 44;
+const SIZE_MAX = 120;
+
+// rise distance (in CSS translateY final, negative value for upward motion)
+const RISE_MIN = -110; // percent-like value used in CSS: will be e.g. "-110%"
+const RISE_MAX = -250;
+
+// how long each bubble floats (ms)
+const DURATION_MIN = 4200;
+const DURATION_MAX = 8200;
+
+// utility
+const rand = (a,b) => Math.random()*(b-a)+a;
+const randInt = (a,b) => Math.floor(rand(a,b+1));
+const pick = arr => arr[Math.floor(Math.random()*arr.length)];
+
+// create and spawn a single bubble
+function createBubble(custom = {}) {
+  const bubble = document.createElement('div');
+  bubble.className = 'bubble';
+  const size = custom.size ?? Math.round(rand(SIZE_MIN,SIZE_MAX));
+  const left = custom.left ?? rand(6, 94); // percentage from left edge
+  const emoji = custom.emoji ?? pick(EMOJIS);
+  const duration = custom.duration ?? Math.round(rand(DURATION_MIN, DURATION_MAX));
+  const rise = custom.rise ?? Math.round(rand(RISE_MIN, RISE_MAX));
+  const driftX = `${rand(-8,8).toFixed(2)}%`;
+  const rot1 = `${rand(-8,8).toFixed(2)}deg`;
+  const rot2 = `${rand(-24,24).toFixed(2)}deg`;
+  const rot3 = `${rand(-72,72).toFixed(2)}deg`;
+
+  // base styling & variables used by CSS animation
+  bubble.style.setProperty('--size', size + ''); // used by inner font sizing
+  bubble.style.setProperty('--riseY', rise + '%');
+  bubble.style.setProperty('--driftX', driftX);
+  bubble.style.setProperty('--rot1', rot1);
+  bubble.style.setProperty('--rot2', rot2);
+  bubble.style.setProperty('--rot3', rot3);
+
+  bubble.style.width = size + 'px';
+  bubble.style.height = size + 'px';
+  bubble.style.left = left + '%';
+  bubble.style.zIndex = Math.floor(100 + (size)); // larger bubbles in front
+
+  // inner element with glassy gradient and emoji
+  const inner = document.createElement('div');
+  inner.className = 'bubble-inner';
+  inner.innerText = emoji;
+  inner.setAttribute('aria-hidden','true');
+
+  // apply a subtle gradient and sheen
+  inner.style.background = `radial-gradient(circle at 30% 25%, rgba(255,255,255,0.35), rgba(255,255,255,0.06) 6%, transparent 8%),
+                           linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.0)),
+                           linear-gradient(135deg, rgba(255,255,255,0.03), rgba(255,255,255,0.0))`;
+  inner.style.backdropFilter = 'blur(2px)';
+
+  bubble.appendChild(inner);
+
+  // floating animation (randomized duration & easing)
+  bubble.style.animation = `floatUp ${duration}ms cubic-bezier(.22,.9,.38,1) forwards`;
+  // little interior wobble of emoji
+  inner.style.animation = `wobble ${Math.round(rand(1900,3200))}ms ease-in-out infinite`;
+
+  // click/touch to pop
+  const popIt = (ev) => {
+    ev.stopPropagation();
+    if(bubble.classList.contains('popped')) return;
+    bubble.classList.add('popped');
+    inner.style.transform = 'scale(1.05)';
+    bubble.classList.add('pop');
+    // small pop sound (optional) - omitted here to avoid autoplay issues
+    setTimeout(()=> bubble.remove(), 280);
+  };
+
+  bubble.addEventListener('click', popIt);
+  bubble.addEventListener('touchstart', (e) => { e.preventDefault(); popIt(e); }, {passive:false});
+
+  // automatically remove after animation ends (float completed)
+  bubble.addEventListener('animationend', (ev) => {
+    if(ev.animationName === 'floatUp') {
+      // graceful fade/pop
+      if(!bubble.classList.contains('popped')) {
+        bubble.classList.add('pop');
+        setTimeout(()=>bubble.remove(), 260);
+      }
+    }
+  });
+
+  stage.appendChild(bubble);
+
+  // optional subtle entrance scale
+  inner.animate([{transform:'scale(.6)'},{transform:'scale(1)'}], {duration:180, easing:'cubic-bezier(.2,.9,.3,1)'});
+}
+
+// auto spawn loop
+function startAuto() {
+  if(spawnTimer) clearInterval(spawnTimer);
+  spawnTimer = setInterval(()=> {
+    createBubble();
+  }, spawnInterval);
+  status.textContent = 'Auto-spawn running';
+  autoSpawn = true;
+  document.getElementById('toggleAuto').innerText = 'Pause';
+}
+
+function stopAuto(){
+  if(spawnTimer) clearInterval(spawnTimer);
+  spawnTimer = null;
+  autoSpawn = false;
+  status.textContent = 'Auto-spawn paused';
+  document.getElementById('toggleAuto').innerText = 'Resume';
+}
+
+// attach control buttons
+document.getElementById('toggleAuto').addEventListener('click', () => {
+  if(autoSpawn) stopAuto(); else startAuto();
+});
+
+document.getElementById('burstOnce').addEventListener('click', () => {
+  for(let i=0;i<5;i++){
+    setTimeout(()=>createBubble({left: rand(8,92)}), i*90);
+  }
+});
+
+document.getElementById('clearBtn').addEventListener('click', () => {
+  document.querySelectorAll('.bubble').forEach(b => b.remove());
+});
+
+// spawn on stage click too
+stage.addEventListener('click', (ev) => {
+  // avoid clicking controls (which are inside stage)
+  if(ev.target.closest('.controls')) return;
+  const rect = stage.getBoundingClientRect();
+  const xPct = ((ev.clientX - rect.left) / rect.width) * 100;
+  createBubble({ left: Math.min(94, Math.max(6, xPct)) });
+});
+
+// initial seed
+for(let i=0;i<6;i++) setTimeout(()=>createBubble(), i*240);
+
+// start auto spawn
+startAuto();
+
+// keyboard accessibility: space = burst, c = clear, p = toggle
+document.addEventListener('keydown', (e) => {
+  if(e.code === 'Space') { e.preventDefault(); document.getElementById('burstOnce').click(); }
+  if(e.key === 'c' || e.key === 'C') document.getElementById('clearBtn').click();
+  if(e.key === 'p' || e.key === 'P') document.getElementById('toggleAuto').click();
+});
+</script>
+</body>
+</html>

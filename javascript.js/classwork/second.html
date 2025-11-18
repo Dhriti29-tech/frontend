@@ -1,0 +1,125 @@
+<!-- <!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      body {
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+      }
+      .small-box {
+        height: 200px;
+        width: 200px;
+        background-color: red;
+      }
+      .big-box {
+        height: 300px;
+        width: 400px;
+        background-color: green;
+      }
+    </style>
+  </head>
+  <body>
+     <script>
+        const body=document.querySelector("body");
+        const box=document.createElement("div");
+        const bttn=document.createElement("button");
+        bttn.textContent="Click me";
+        box.classList.add("small-box");
+        body.appendChild(box);
+        body.appendChild(bttn);
+        let flag=0;
+        bttn.addEventListener("click",function(){
+        if(flag===0){
+            box.classList.add("big-box");
+            box.classList.remove("small-box");
+            flag=1;}
+        else{
+            box.classList.add("small-box");
+            box.classList.remove("big-box");
+            flag=0;
+        }})
+    </script>  -->
+<!-- <script>
+    <div id="outer" style="padding: 40px; background: #f88">
+      Outer
+      <div id="inner" style="padding: 40px; background: #8f8">Inner</div>
+    </div>
+      document
+        .getElementById("outer")
+        .addEventListener("click", () => console.log("Outer bubble"));
+      document
+        .getElementById("inner")
+        .addEventListener("click", () => console.log("Inner bubble"));
+      document
+        .getElementById("outer")
+        .addEventListener("click", () => console.log("Outer capture"), true);
+    </script> -->
+<!-- <script>
+    <div
+      id="progress"
+      style="
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 5px;
+        background: blue;
+        width: 0;
+      "
+    ></div>
+      window.addEventListener("scroll", () => {
+        const scrollTop = window.scrollY;
+        const docHeight = document.body.scrollHeight - window.innerHeight;
+        const scrolled = (scrollTop / docHeight) * 100;
+        document.getElementById("progress").style.width = scrolled + "%";
+      });
+    </script> -->
+<!-- </body>
+</html> -->
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bubbling Demo</title>
+    <style>
+      body {
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        gap: 20px;
+      }
+      #outer {
+        padding: 40px;
+        background: #f88;
+      }
+      #inner {
+        padding: 40px;
+        background: #8f8;
+      }
+    </style>
+  </head>
+  <body>
+    <ul id="list">
+      <li>🍎 Apple</li>
+      <li>🍌 Banana</li>
+      <li>🍇 Grapes</li>
+    </ul>
+
+    <script>
+      document.getElementById("list").addEventListener("click", (e) => {
+        if (e.target.tagName === "LI") {
+          e.target.style.textDecoration = "line-through";
+        }
+      });
+    </script>
+  </body>
+</html>
