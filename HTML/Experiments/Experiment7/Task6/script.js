@@ -14,3 +14,7 @@ nextBtn.addEventListener("click",async()=>{
     }
 
 })
+
+//Array method 
+// object method 
+
