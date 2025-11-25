@@ -1,0 +1,22 @@
+#slider img{
+    width:400px;
+    height:250px;
+    border-radius: 10px;
+}
+#slider{
+    display: inline-block;
+}
+.main{
+    background-color: blueviolet;
+    margin: 5px;
+    padding:5px;
+    border-radius: 2px solid black;
+    box-shadow: 20px 30px 40px yellow;
+    box-sizing: border-box;
+    width:fit-content;
+}
+
+button:hover{
+    background-color: chartreuse;
+    transform: scale(1.5);
+}
